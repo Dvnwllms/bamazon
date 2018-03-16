@@ -10,57 +10,56 @@ var connection = mysql.createConnection({
 
 connection.connect(function(err) {
     if (err) throw err;
-    select();
+    showData();
+    
 });
 
-function select() {
-    inquirer.prompt([
-        {
-            name: "questions",
-            type: "list",
-            message: "Do you have the product ID or do you want to check item stock?",
-            choices: ["id", "stock",]
-        }
-    ]).then(function(user){
-        switch (user.questions) {
-            case "id":
-                idInput();
-                break;
-            case "stock":
-                stockCheck();
-                break;
-        }
-    })
-};
+function showData() {
+    connection.query ("SELECT item_id, product_name, price FROM products", function(err, res) {
+        if (err) throw err
 
-function idInput() {
-    inquirer.prompt([
-        {
-           name: "idLookUp", 
-           type: "input",
-           message: "What is the ID of the product you want to buy?"
-        }
-    ]).then(function(user){
-        connection.query("SELECT * FROM products WHERE item_id=?", [user.idLookUp], function(err, res){
-            if (err) throw err;
-            console.log(res);
-            connection.end();
-        })
-    })
-}
+        for (var i = 0; i < res.length; i++) {
+            
+            var id = res[i].item_id;
+            var name = res[i].product_name;
+            var price = res[i].price;
 
-function idInput() {
-    inquirer.prompt([
-        {
-           name: "stockFinder", 
-           type: "input",
-           message: "What product are you trying to check inventory for?"
+            console.log("ID #: " + id + " Product Name: " + name + " Price $" + price);
         }
-    ]).then(function(user){
-        connection.query("SELECT stock_quantity FROM products WHERE product_name=?", [user.stockFinder], function(err, res){
-            if (err) throw err;
-            console.log(res);
-            connection.end();
-        })
-    })
+        inquirer.prompt([
+            {
+                name: "idselect",
+                type: "input",
+                message: "Enter ID # of product you want to purchase."
+            },
+            
+            {
+                name: "quantityselect",
+                type: "input",
+                message: "How many do you want?"
+            }
+        ]).then(function(checkOut) {
+
+            var item = checkOut.idselect;
+            var inStock = checkOut.quantityselect;
+
+            connection.query("SELECT * FROM products WHERE item_id =?", (item), function(err, res) {
+
+                var thisProduct = res[0];
+                var stockQuantity = thisProduct.stock_quantity;
+
+                if (stockQuantity < inStock) {
+                    console.log("Sorry, that item is sold out!");
+                    showData();
+                    
+                }else{
+                    console.log("Order recieved! Thanks for shopping with Bamazon! Now pay up!!!")
+                    connection.end();
+                }
+
+            })
+
+
+        });
+    });       
 }
