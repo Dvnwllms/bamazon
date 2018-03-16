@@ -38,7 +38,7 @@ function showData() {
                 type: "input",
                 message: "How many do you want?"
             }
-            
+
         ]).then(function(checkOut) {
 
             var item = checkOut.idselect;
